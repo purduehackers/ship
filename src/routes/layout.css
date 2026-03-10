@@ -1,0 +1,64 @@
+@import 'tailwindcss';
+
+@font-face {
+	font-family: 'PixelHackers';
+	src: url('../assets/fonts/PixelHackers.woff2') format('woff2');
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'PolySans';
+	src: url('../assets/fonts/PolySans-Neutral.woff2') format('woff2');
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'PolySans';
+	src: url('../assets/fonts/PolySans-Median.woff2') format('woff2');
+	font-weight: 500;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'PolySans';
+	src: url('../assets/fonts/PolySans-Bulky.woff2') format('woff2');
+	font-weight: 700;
+	font-style: normal;
+	font-display: swap;
+}
+
+@theme {
+	--font-pixel: 'PixelHackers', monospace;
+	--font-body: 'PolySans', system-ui, sans-serif;
+	--color-bg: #000000;
+	--color-surface: #000000;
+	--color-primary: #7d3bff;
+	--color-secondary: #ffee00;
+	--color-accent: #0084ff;
+	--color-accent-2: #ff00cc;
+	--color-border: #333333;
+	--color-text: #ffffff;
+	--color-muted: #888888;
+}
+
+::selection {
+	background: var(--color-primary);
+	color: #fff;
+}
+
+html {
+	overscroll-behavior: none;
+}
+
+body {
+	background-color: var(--color-bg);
+	font-family: var(--font-body);
+	color: var(--color-text);
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
