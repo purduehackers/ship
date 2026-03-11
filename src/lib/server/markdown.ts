@@ -84,9 +84,10 @@ function rehypeDiscord() {
 				match,
 				type: 'emoji' as const
 			}));
-			const timestampMatches = [...origText.matchAll(/<t:(\d+)(?::[tTdDfFR])?>/g)].map(
-				(match) => ({ match, type: 'timestamp' as const })
-			);
+			const timestampMatches = [...origText.matchAll(/<t:(\d+)(?::[tTdDfFR])?>/g)].map((match) => ({
+				match,
+				type: 'timestamp' as const
+			}));
 			const allMatches = [...entityMatches, ...emojiMatches, ...timestampMatches];
 			if (allMatches.length === 0) return;
 			allMatches.sort((a, b) => a.match.index! - b.match.index!);
@@ -148,6 +149,17 @@ function abbreviateRev(rev: string): string {
 	return rev;
 }
 
+const GIT_HOSTS = new Set([
+	'github.com',
+	'gitlab.com',
+	'bitbucket.org',
+	'codeberg.org',
+	'sr.ht',
+	'gitea.com',
+	'git.inx.moe',
+	'gist.github.com'
+]);
+
 /** Rehype plugin: shorten GitHub/Git URLs into pretty references */
 function rehypeGitLinks() {
 	return (tree: Node) => {
@@ -156,6 +168,13 @@ function rehypeGitLinks() {
 			const href = link.properties.href;
 			if (!href || typeof href !== 'string') return;
 			if (link.children.length !== 1 || link.children[0].type !== 'text') return;
+
+			try {
+				const url = new URL(href);
+				if (!GIT_HOSTS.has(url.hostname)) return;
+			} catch {
+				return;
+			}
 			const text = (link.children[0] as Text).value;
 			if (text !== href) return;
 
