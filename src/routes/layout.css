@@ -62,3 +62,43 @@ body {
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 }
+
+.ship-content a {
+	color: var(--color-accent);
+	text-decoration: underline;
+	text-underline-offset: 2px;
+}
+
+.ship-content a:hover {
+	color: var(--color-primary);
+}
+
+.ship-content code {
+	background: #1a1a1a;
+	padding: 0.1em 0.3em;
+	border-radius: 3px;
+	font-size: 0.85em;
+}
+
+.ship-content pre {
+	background: #1a1a1a;
+	padding: 0.75em;
+	overflow-x: auto;
+	margin: 0.5em 0;
+}
+
+.ship-content pre code {
+	background: none;
+	padding: 0;
+}
+
+.ship-content p {
+	margin: 0.25em 0;
+}
+
+.ship-content blockquote {
+	border-left: 3px solid var(--color-border);
+	padding-left: 0.75em;
+	margin: 0.25em 0;
+	color: var(--color-muted);
+}

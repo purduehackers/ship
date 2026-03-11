@@ -1,7 +1,6 @@
 <script lang="ts">
 	import ship1 from '../assets/ship1.png';
 	import ship2 from '../assets/ship2.png';
-	import Masonry from 'svelte-masonry';
 	import { initGliderSmoke } from '$lib/gliderSmoke';
 
 	let { data } = $props();
@@ -33,14 +32,6 @@
 		return cleanup;
 	});
 
-	let refreshLayout: (() => void) | null = $state(null);
-
-	function onImageLoad() {
-		if (refreshLayout) {
-			refreshLayout();
-		}
-	}
-
 	function relativeTime(iso: string): string {
 		const diff = Date.now() - new Date(iso).getTime();
 		const minutes = Math.floor(diff / 60000);
@@ -55,7 +46,9 @@
 
 <div class="min-h-screen bg-bg">
 	<header class="relative z-50 border-b-4 border-border px-6 py-8 md:px-12 lg:px-24">
-		<div class="flex flex-col-reverse items-start gap-4 sm:flex-row sm:items-end sm:justify-between">
+		<div
+			class="flex flex-col-reverse items-start gap-4 sm:flex-row sm:items-end sm:justify-between"
+		>
 			<div>
 				<h1 class="font-pixel text-5xl leading-tight text-text md:text-7xl">
 					Purdue Hackers Ships
@@ -85,45 +78,82 @@
 			<p class="font-body text-lg text-muted">No ships yet.</p>
 		</div>
 	{:else}
-		<div>
-			<Masonry gridGap="0px" colWidth="minmax(300px, 1fr)" items={data.ships} bind:refreshLayout>
-				{#each data.ships as ship (ship.id)}
-					<div class="border-4 border-border p-4 font-body">
-						<div class="flex items-center gap-2">
-							{#if ship.avatarUrl}
-								<img src={ship.avatarUrl} alt={ship.username} class="h-6 w-6 rounded-full" />
-							{:else}
-								<div class="h-6 w-6 rounded-full bg-border"></div>
-							{/if}
-							<span class="text-sm font-bold text-text">{ship.username}</span>
-							<span class="ml-auto text-sm text-muted">{relativeTime(ship.shippedAt)}</span>
-						</div>
-
-						{#if ship.title}
-							<h2 class="mt-3 font-bold text-text">{ship.title}</h2>
+		<div class="masonry">
+			{#each data.ships as ship (ship.id)}
+				<div class="masonry-item border-4 border-border p-4 font-body">
+					<div class="flex items-center gap-2">
+						{#if ship.avatarUrl}
+							<img
+								src={ship.avatarUrl}
+								alt={ship.username}
+								class="h-6 w-6 rounded-full"
+							/>
+						{:else}
+							<div class="h-6 w-6 rounded-full bg-border"></div>
 						{/if}
-
-						{#if ship.content}
-							<p class="mt-2 text-sm text-muted">{ship.content}</p>
-						{/if}
-
-						{#if ship.attachments && ship.attachments.length > 0}
-							<div class="mt-3 flex gap-2 overflow-hidden">
-								{#each ship.attachments as attachment (attachment.url)}
-									{#if attachment.type.startsWith('image')}
-										<img
-											src={attachment.url}
-											alt={attachment.filename}
-											class="max-h-[200px] object-cover"
-											onload={onImageLoad}
-										/>
-									{/if}
-								{/each}
-							</div>
-						{/if}
+						<span class="text-sm font-bold text-text">{ship.username}</span>
+						<span class="ml-auto text-sm text-muted">{relativeTime(ship.shippedAt)}</span>
 					</div>
-				{/each}
-			</Masonry>
+
+					{#if ship.contentHtml}
+						<div class="ship-content mt-2 break-words text-sm text-muted" style="overflow-wrap: anywhere;">
+							{@html ship.contentHtml}
+						</div>
+					{/if}
+
+					{#if ship.attachments && ship.attachments.length > 0}
+						<div class="mt-3 flex gap-2 overflow-hidden">
+							{#each ship.attachments as attachment, i (attachment.url + '-' + i)}
+								{#if attachment.type.startsWith('image')}
+									<img
+										src={attachment.url}
+										alt={attachment.filename}
+										class="max-h-[200px] object-cover"
+									/>
+								{:else if attachment.type.startsWith('video')}
+									<video
+										src={attachment.url}
+										controls
+										preload="metadata"
+										class="max-h-[200px]"
+									>
+										<track kind="captions" />
+									</video>
+								{/if}
+							{/each}
+						</div>
+					{/if}
+				</div>
+			{/each}
 		</div>
 	{/if}
 </div>
+
+<style>
+	.masonry {
+		columns: 1;
+		column-gap: 0px;
+	}
+
+	@media (min-width: 640px) {
+		.masonry {
+			columns: 2;
+		}
+	}
+
+	@media (min-width: 1024px) {
+		.masonry {
+			columns: 3;
+		}
+	}
+
+	@media (min-width: 1280px) {
+		.masonry {
+			columns: 4;
+		}
+	}
+
+	.masonry-item {
+		break-inside: avoid;
+	}
+</style>
