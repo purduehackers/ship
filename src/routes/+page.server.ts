@@ -2,12 +2,24 @@ import { db } from '$lib/server/db';
 import { ship } from '$lib/server/db/schema';
 import { desc } from 'drizzle-orm';
 import { renderContent } from '$lib/server/markdown';
+import { env } from '$env/dynamic/private';
+
+if (!env.ISR_BYPASS_TOKEN) throw new Error('ISR_BYPASS_TOKEN is not set');
 
 interface StoredAttachment {
 	key: string;
 	type: string;
 	filename: string;
+	width?: number;
+	height?: number;
 }
+
+export const config = {
+	isr: {
+		expiration: 60,
+		bypassToken: env.ISR_BYPASS_TOKEN
+	}
+};
 
 export async function load() {
 	const ships = await db.select().from(ship).orderBy(desc(ship.shippedAt));
@@ -22,7 +34,9 @@ export async function load() {
 				attachments: stored.map((a) => ({
 					url: `/api/attachment/${a.key}`,
 					type: a.type,
-					filename: a.filename
+					filename: a.filename,
+					width: a.width,
+					height: a.height
 				}))
 			};
 		})

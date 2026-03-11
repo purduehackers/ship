@@ -7,12 +7,19 @@
 
 	const frames = [ship1, ship2];
 	let frame = $state(0);
+	let loadingFrame = $state(0);
 
 	$effect(() => {
 		const interval = setInterval(() => {
 			frame = frame === 0 ? 1 : 0;
 		}, 500);
-		return () => clearInterval(interval);
+		const fast = setInterval(() => {
+			loadingFrame = loadingFrame === 0 ? 1 : 0;
+		}, 250);
+		return () => {
+			clearInterval(interval);
+			clearInterval(fast);
+		};
 	});
 
 	let smokeCanvas: HTMLCanvasElement;
@@ -42,6 +49,85 @@
 		const days = Math.floor(hours / 24);
 		return days + 'd ago';
 	}
+
+	let masonryContainer = $state<HTMLDivElement>();
+	let masonryReady = $state(false);
+	let savedScrollY: number | null = null;
+	let allImagesLoaded = false;
+
+	function checkAllImagesLoaded() {
+		if (!masonryContainer) return false;
+		const imgs = masonryContainer.querySelectorAll('img');
+		return Array.from(imgs).every((img) => img.complete);
+	}
+
+	function layoutMasonry() {
+		if (!masonryContainer) return;
+		const items = Array.from(masonryContainer.children) as HTMLElement[];
+		if (items.length === 0) return;
+
+		const containerWidth = masonryContainer.offsetWidth;
+		const cols =
+			containerWidth >= 1280 ? 4 : containerWidth >= 1024 ? 3 : containerWidth >= 640 ? 2 : 1;
+		const colWidth = containerWidth / cols;
+		const colHeights = new Array(cols).fill(0);
+
+		for (const item of items) {
+			item.style.position = 'absolute';
+			item.style.width = `${colWidth}px`;
+
+			const shortest = colHeights.indexOf(Math.min(...colHeights));
+			item.style.left = `${shortest * colWidth}px`;
+			item.style.top = `${colHeights[shortest]}px`;
+			colHeights[shortest] += item.offsetHeight;
+		}
+
+		masonryContainer.style.height = `${Math.max(...colHeights)}px`;
+		if (!masonryReady) masonryReady = true;
+
+		// Keep restoring scroll until all images are loaded
+		if (savedScrollY !== null && !allImagesLoaded) {
+			const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+			if (savedScrollY <= maxScroll) {
+				window.scrollTo(0, savedScrollY);
+			}
+			if (checkAllImagesLoaded()) {
+				allImagesLoaded = true;
+				savedScrollY = null;
+			}
+		}
+	}
+
+	$effect(() => {
+		// Read saved scroll on mount
+		const saved = sessionStorage.getItem('ships-scroll');
+		if (saved) savedScrollY = parseInt(saved);
+
+		// Save scroll position on unload
+		const onBeforeUnload = () => {
+			sessionStorage.setItem('ships-scroll', String(window.scrollY));
+		};
+		window.addEventListener('beforeunload', onBeforeUnload);
+		return () => window.removeEventListener('beforeunload', onBeforeUnload);
+	});
+
+	$effect(() => {
+		if (!masonryContainer) return;
+		data.ships;
+
+		layoutMasonry();
+
+		const ro = new ResizeObserver(() => layoutMasonry());
+		ro.observe(masonryContainer);
+
+		const handleLoad = () => layoutMasonry();
+		masonryContainer.addEventListener('load', handleLoad, true);
+
+		return () => {
+			ro.disconnect();
+			masonryContainer?.removeEventListener('load', handleLoad, true);
+		};
+	});
 </script>
 
 <div class="min-h-screen overflow-clip bg-bg">
@@ -78,9 +164,20 @@
 			<p class="font-body text-lg text-muted">No ships yet.</p>
 		</div>
 	{:else}
-		<div class="masonry">
+		{#if !masonryReady}
+			<div class="flex flex-col items-center justify-center gap-3 py-24">
+				<img
+					src={frames[loadingFrame]}
+					alt="Loading"
+					class="h-[64px] w-[64px]"
+					style="image-rendering: pixelated; filter: invert(1);"
+				/>
+				<p class="font-pixel text-sm text-muted">Laying out feed...</p>
+			</div>
+		{/if}
+		<div class="masonry" bind:this={masonryContainer} class:masonry-ready={masonryReady}>
 			{#each data.ships as ship (ship.id)}
-				<div class="masonry-item border-4 border-border p-4 font-body">
+				<div class="border-4 border-border p-4 font-body">
 					<div class="flex items-center gap-2">
 						{#if ship.avatarUrl}
 							<img src={ship.avatarUrl} alt={ship.username} class="h-6 w-6 rounded-full" />
@@ -101,16 +198,21 @@
 					{/if}
 
 					{#if ship.attachments && ship.attachments.length > 0}
-						<div class="mt-3 flex gap-2 overflow-hidden">
+						<div class="mt-3 flex flex-col items-start gap-2">
 							{#each ship.attachments as attachment, i (attachment.url + '-' + i)}
 								{#if attachment.type.startsWith('image')}
 									<img
 										src={attachment.url}
 										alt={attachment.filename}
-										class="max-h-[200px] object-cover"
+										width={attachment.width}
+										height={attachment.height}
+										class="max-w-full rounded"
+										style={attachment.width && attachment.height
+											? `aspect-ratio: ${attachment.width}/${attachment.height};`
+											: ''}
 									/>
 								{:else if attachment.type.startsWith('video')}
-									<video src={attachment.url} controls preload="metadata" class="max-h-[200px]">
+									<video src={attachment.url} controls preload="metadata" class="w-full rounded">
 										<track kind="captions" />
 									</video>
 								{/if}
@@ -120,34 +222,22 @@
 				</div>
 			{/each}
 		</div>
+		{#if masonryReady}
+			<div class="py-12 text-center font-body text-sm text-muted">
+				You've reached the end! That's every ship so far.
+			</div>
+		{/if}
 	{/if}
 </div>
 
 <style>
+	/* Hidden until JS masonry positions everything */
 	.masonry {
-		columns: 1;
-		column-gap: 0px;
+		position: relative;
+		visibility: hidden;
 	}
 
-	@media (min-width: 640px) {
-		.masonry {
-			columns: 2;
-		}
-	}
-
-	@media (min-width: 1024px) {
-		.masonry {
-			columns: 3;
-		}
-	}
-
-	@media (min-width: 1280px) {
-		.masonry {
-			columns: 4;
-		}
-	}
-
-	.masonry-item {
-		break-inside: avoid;
+	.masonry-ready {
+		visibility: visible;
 	}
 </style>
