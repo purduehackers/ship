@@ -33,11 +33,12 @@ export async function uploadAttachment(
 	return key;
 }
 
-export async function getAttachment(key: string) {
+export async function getAttachment(key: string, range?: string) {
 	const result = await r2.send(
 		new GetObjectCommand({
 			Bucket: BUCKET,
-			Key: key
+			Key: key,
+			Range: range
 		})
 	);
 	return result;
