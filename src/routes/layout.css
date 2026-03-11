@@ -102,3 +102,42 @@ body {
 	margin: 0.25em 0;
 	color: var(--color-muted);
 }
+
+.ship-content .mention {
+	background: rgba(88, 101, 242, 0.3);
+	color: #c9cdfb;
+	padding: 0 2px;
+	border-radius: 3px;
+	font-weight: 500;
+}
+
+.ship-content .discord-emoji {
+	display: inline;
+	height: 1.2em;
+	width: 1.2em;
+	vertical-align: -0.2em;
+}
+
+.ship-content .github-commit {
+	background: #1a1a1a;
+	border: 1px solid var(--color-border);
+	border-radius: 4px;
+	padding: 1px 6px;
+	font-size: 0.85em;
+	text-decoration: none;
+}
+
+.ship-content .github-commit:hover {
+	border-color: var(--color-accent);
+}
+
+.ship-content .github-repo {
+	color: var(--color-muted);
+	margin-right: 2px;
+}
+
+.ship-content .github-sha,
+.ship-content .github-num,
+.ship-content .github-file {
+	color: var(--color-accent);
+}
