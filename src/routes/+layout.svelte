@@ -10,6 +10,7 @@
 <svelte:head>
 	<link rel="icon" href={favicon} media="(prefers-color-scheme: light)" />
 	<link rel="icon" href={faviconLight} media="(prefers-color-scheme: dark)" />
+	<title>Purdue Hackers Ships</title>
 </svelte:head>
 <Nav />
 <div class="pt-8">
