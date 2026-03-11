@@ -44,7 +44,7 @@
 	}
 </script>
 
-<div class="min-h-screen bg-bg">
+<div class="min-h-screen overflow-clip bg-bg">
 	<header class="relative z-50 border-b-4 border-border px-6 py-8 md:px-12 lg:px-24">
 		<div
 			class="flex flex-col-reverse items-start gap-4 sm:flex-row sm:items-end sm:justify-between"
@@ -83,11 +83,7 @@
 				<div class="masonry-item border-4 border-border p-4 font-body">
 					<div class="flex items-center gap-2">
 						{#if ship.avatarUrl}
-							<img
-								src={ship.avatarUrl}
-								alt={ship.username}
-								class="h-6 w-6 rounded-full"
-							/>
+							<img src={ship.avatarUrl} alt={ship.username} class="h-6 w-6 rounded-full" />
 						{:else}
 							<div class="h-6 w-6 rounded-full bg-border"></div>
 						{/if}
@@ -96,7 +92,10 @@
 					</div>
 
 					{#if ship.contentHtml}
-						<div class="ship-content mt-2 break-words text-sm text-muted" style="overflow-wrap: anywhere;">
+						<div
+							class="ship-content mt-2 text-sm break-words text-muted"
+							style="overflow-wrap: anywhere;"
+						>
 							{@html ship.contentHtml}
 						</div>
 					{/if}
@@ -111,12 +110,7 @@
 										class="max-h-[200px] object-cover"
 									/>
 								{:else if attachment.type.startsWith('video')}
-									<video
-										src={attachment.url}
-										controls
-										preload="metadata"
-										class="max-h-[200px]"
-									>
+									<video src={attachment.url} controls preload="metadata" class="max-h-[200px]">
 										<track kind="captions" />
 									</video>
 								{/if}
