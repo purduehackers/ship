@@ -23,6 +23,27 @@
 	});
 
 	let smokeCanvas: HTMLCanvasElement;
+	let shipRef = $state<HTMLDivElement>();
+
+	// Position canvas over the ship sprite
+	$effect(() => {
+		if (!smokeCanvas || !shipRef) return;
+		function positionCanvas() {
+			if (!shipRef || !smokeCanvas) return;
+			const rect = shipRef.getBoundingClientRect();
+			const scrollY = window.scrollY;
+			// Canvas is 60*4=240px wide, 80*4=320px tall, anchored bottom-left of ship
+			smokeCanvas.style.left = `${rect.left}px`;
+			smokeCanvas.style.top = `${rect.top + scrollY + rect.height - 320 - 32}px`;
+		}
+		positionCanvas();
+		window.addEventListener('scroll', positionCanvas, { passive: true });
+		window.addEventListener('resize', positionCanvas);
+		return () => {
+			window.removeEventListener('scroll', positionCanvas);
+			window.removeEventListener('resize', positionCanvas);
+		};
+	});
 
 	$effect(() => {
 		if (!smokeCanvas) return;
@@ -113,7 +134,6 @@
 
 	$effect(() => {
 		if (!masonryContainer) return;
-		data.ships;
 
 		layoutMasonry();
 
@@ -130,8 +150,13 @@
 	});
 </script>
 
-<div class="min-h-screen overflow-clip bg-bg">
-	<header class="relative z-50 border-b-4 border-border px-6 py-8 md:px-12 lg:px-24">
+<div class="min-h-screen overflow-x-clip bg-bg">
+	<canvas
+		bind:this={smokeCanvas}
+		class="pointer-events-none absolute z-20"
+		style="image-rendering: pixelated;"
+	></canvas>
+	<header class="relative border-b-4 border-border bg-bg px-6 py-8 md:px-12 lg:px-24">
 		<div
 			class="flex flex-col-reverse items-start gap-4 sm:flex-row sm:items-end sm:justify-between"
 		>
@@ -143,16 +168,11 @@
 					A feed of everything Purdue Hackers members have shipped.
 				</p>
 			</div>
-			<div class="relative shrink-0">
-				<canvas
-					bind:this={smokeCanvas}
-					class="pointer-events-none absolute bottom-8 left-0 z-50"
-					style="image-rendering: pixelated;"
-				></canvas>
+			<div class="relative shrink-0" bind:this={shipRef}>
 				<img
 					src={frames[frame]}
 					alt="Ship"
-					class="relative z-10 h-[80px] w-[80px]"
+					class="relative h-[80px] w-[80px]"
 					style="image-rendering: pixelated; filter: invert(1);"
 				/>
 			</div>
@@ -169,7 +189,7 @@
 				<img
 					src={frames[loadingFrame]}
 					alt="Loading"
-					class="h-[64px] w-[64px]"
+					class="h-16 w-16"
 					style="image-rendering: pixelated; filter: invert(1);"
 				/>
 				<p class="font-pixel text-sm text-muted">Laying out feed...</p>

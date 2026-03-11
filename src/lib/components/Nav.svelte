@@ -12,13 +12,18 @@
 </script>
 
 <nav
-	class={`fixed top-0 z-40 w-full h-8 flex items-center transition-colors duration-200 ${scrolled ? 'bg-primary' : 'bg-transparent'}`}
+	class={`fixed top-0 flex h-8 w-full items-center transition-colors duration-200 ${scrolled ? 'z-40 bg-primary' : 'z-10 bg-transparent'}`}
 >
-	<div class="w-full px-2 md:px-3 mx-auto flex justify-between items-center">
+	<div class="mx-auto flex w-full items-center justify-between px-2 md:px-3">
 		<!-- Left: Glider icon -->
-		<a href="https://purduehackers.com" target="_blank" rel="noopener noreferrer" aria-label="Purdue Hackers">
+		<a
+			href="https://purduehackers.com"
+			target="_blank"
+			rel="noopener noreferrer"
+			aria-label="Purdue Hackers"
+		>
 			<svg
-				class="w-4 h-4"
+				class="h-4 w-4"
 				viewBox="0 0 16 16"
 				fill="currentColor"
 				xmlns="http://www.w3.org/2000/svg"
@@ -30,17 +35,17 @@
 		</a>
 
 		<!-- Center: Buttons -->
-		<div class="flex gap-2 justify-center">
+		<div class="flex justify-center gap-2">
 			<a href="https://purduehackers.com" target="_blank" rel="noopener noreferrer">
 				<button
-					class={`cursor-pointer px-2 uppercase text-sm font-pixel font-normal rounded-none ${scrolled ? 'text-white bg-transparent border border-white' : 'text-white/85 bg-transparent border border-white/85'}`}
+					class={`cursor-pointer rounded-none px-2 font-pixel text-sm font-normal uppercase ${scrolled ? 'border border-white bg-transparent text-white' : 'border border-white/85 bg-transparent text-white/85'}`}
 				>
 					Learn more
 				</button>
 			</a>
 			<a href="https://discord.com/invite/5paFjKzdPE" target="_blank" rel="noopener noreferrer">
 				<button
-					class={`cursor-pointer px-2 uppercase text-sm font-pixel font-normal rounded-none ${scrolled ? 'text-primary bg-white' : 'text-black bg-white/85'}`}
+					class={`cursor-pointer rounded-none px-2 font-pixel text-sm font-normal uppercase ${scrolled ? 'bg-white text-primary' : 'bg-white/85 text-black'}`}
 				>
 					Join us
 				</button>
@@ -48,6 +53,6 @@
 		</div>
 
 		<!-- Right: Empty for balance -->
-		<div class="w-4 h-4"></div>
+		<div class="h-4 w-4"></div>
 	</div>
 </nav>
