@@ -232,7 +232,18 @@
 											: ''}
 									/>
 								{:else if attachment.type.startsWith('video')}
-									<video src={attachment.url} controls preload="metadata" class="w-full rounded">
+									<video
+										src={attachment.url}
+										controls
+										preload="metadata"
+										width={attachment.width}
+										height={attachment.height}
+										class="max-w-full rounded"
+										style={attachment.width && attachment.height
+											? `aspect-ratio: ${attachment.width}/${attachment.height};`
+											: 'aspect-ratio: 16/9;'}
+										onloadedmetadata={() => layoutMasonry()}
+									>
 										<track kind="captions" />
 									</video>
 								{/if}
