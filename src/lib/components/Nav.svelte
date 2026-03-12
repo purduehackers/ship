@@ -4,6 +4,9 @@
 	let scrolled = $state(false);
 	let hovered = $state(false);
 
+	const canHover = () =>
+		window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
 	$effect(() => {
 		function onScroll() {
 			scrolled = window.scrollY > 2;
@@ -24,12 +27,12 @@
 			target="_blank"
 			rel="noopener noreferrer"
 			aria-label="Purdue Hackers"
-			class="relative flex h-8 w-8 items-center justify-center"
-			onmouseenter={() => (hovered = true)}
+			class="nav-glider relative flex h-8 w-8 items-center justify-center"
+			onmouseenter={() => canHover() && (hovered = true)}
 			onmouseleave={() => (hovered = false)}
 		>
 			<svg
-				class="absolute top-1/2 left-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 transition-opacity duration-200"
+				class="absolute top-1/2 left-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 will-change-[opacity] transition-opacity duration-200"
 				style:opacity={hovered ? 0 : 1}
 				viewBox="0 0 16 16"
 				fill="currentColor"
@@ -40,7 +43,7 @@
 				/>
 			</svg>
 			<div
-				class="absolute top-1/2 left-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 transition-opacity duration-200"
+				class="absolute top-1/2 left-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 will-change-[opacity] transition-opacity duration-200"
 				style:opacity={hovered ? 1 : 0}
 			>
 				<Sign />
@@ -51,14 +54,14 @@
 		<div class="flex justify-center gap-2">
 			<a href="https://purduehackers.com" target="_blank" rel="noopener noreferrer">
 				<button
-					class={`cursor-pointer rounded-none px-2 font-pixel text-sm font-normal uppercase ${scrolled ? 'border border-white bg-transparent text-white' : 'border border-white/85 bg-transparent text-white/85'}`}
+					class={`cursor-pointer rounded-none px-2 font-pixel text-sm font-normal uppercase transition-transform active:scale-[0.97] ${scrolled ? 'border border-white bg-transparent text-white' : 'border border-white/85 bg-transparent text-white/85'}`}
 				>
 					Learn more
 				</button>
 			</a>
 			<a href="https://discord.com/invite/5paFjKzdPE" target="_blank" rel="noopener noreferrer">
 				<button
-					class={`cursor-pointer rounded-none px-2 font-pixel text-sm font-normal uppercase ${scrolled ? 'bg-white text-primary' : 'bg-white/85 text-black'}`}
+					class={`cursor-pointer rounded-none px-2 font-pixel text-sm font-normal uppercase transition-transform active:scale-[0.97] ${scrolled ? 'bg-white text-primary' : 'bg-white/85 text-black'}`}
 				>
 					Join us
 				</button>
@@ -69,3 +72,14 @@
 		<div class="h-4 w-4"></div>
 	</div>
 </nav>
+
+<style>
+	.nav-glider::before {
+		content: '';
+		position: absolute;
+		inset: 50% auto auto 50%;
+		width: 44px;
+		height: 44px;
+		transform: translate(-50%, -50%);
+	}
+</style>
