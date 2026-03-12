@@ -1,5 +1,8 @@
 <script lang="ts">
+	import Sign from './Sign.svelte';
+
 	let scrolled = $state(false);
+	let hovered = $state(false);
 
 	$effect(() => {
 		function onScroll() {
@@ -21,9 +24,13 @@
 			target="_blank"
 			rel="noopener noreferrer"
 			aria-label="Purdue Hackers"
+			class="relative flex h-8 w-8 items-center justify-center"
+			onmouseenter={() => (hovered = true)}
+			onmouseleave={() => (hovered = false)}
 		>
 			<svg
-				class="h-4 w-4"
+				class="absolute top-1/2 left-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 transition-opacity duration-200"
+				style:opacity={hovered ? 0 : 1}
 				viewBox="0 0 16 16"
 				fill="currentColor"
 				xmlns="http://www.w3.org/2000/svg"
@@ -32,6 +39,12 @@
 					d="M5.333 5.333h5.333v5.333H5.333zM10.667 5.333H16v5.333h-5.333zM5.333 0h5.333v5.333H5.333zM10.667 10.667H16V16h-5.333zM0 10.667h5.333V16H0z"
 				/>
 			</svg>
+			<div
+				class="absolute top-1/2 left-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 transition-opacity duration-200"
+				style:opacity={hovered ? 1 : 0}
+			>
+				<Sign />
+			</div>
 		</a>
 
 		<!-- Center: Buttons -->
