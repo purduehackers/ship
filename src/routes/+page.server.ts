@@ -2,6 +2,7 @@ import { db } from '$lib/server/db';
 import { ship } from '$lib/server/db/schema';
 import { desc } from 'drizzle-orm';
 import { renderContent } from '$lib/server/markdown';
+import { getUserModes } from '$lib/server/privacy';
 import { env } from '$env/dynamic/private';
 
 if (!env.ISR_BYPASS_TOKEN) throw new Error('ISR_BYPASS_TOKEN is not set');
@@ -24,8 +25,12 @@ export const config = {
 export async function load() {
 	const ships = await db.select().from(ship).orderBy(desc(ship.shippedAt));
 
+	// Filter out ships from users who have opted out
+	const modes = await getUserModes(ships.map((s) => s.userId));
+	const visibleShips = ships.filter((s) => modes.get(s.userId) === 'opt_in');
+
 	const mapped = await Promise.all(
-		ships.map(async (s) => {
+		visibleShips.map(async (s) => {
 			const stored = JSON.parse(s.attachments ?? '[]') as StoredAttachment[];
 			const contentHtml = s.content?.trim() ? await renderContent(s.content) : null;
 			return {
