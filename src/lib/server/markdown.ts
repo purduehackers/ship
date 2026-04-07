@@ -4,135 +4,44 @@ import remarkRehype from 'remark-rehype';
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize';
 import rehypeStringify from 'rehype-stringify';
 import { visit } from 'unist-util-visit';
-import { gfmAutolinkLiteral } from 'micromark-extension-gfm-autolink-literal';
-import { gfmAutolinkLiteralFromMarkdown } from 'mdast-util-gfm-autolink-literal';
 import type { Node } from 'unist';
-import type { Parent, Text, Element, RootContent } from 'hast';
+import type { Text, Element } from 'hast';
 import { getDiscordUser, getDiscordChannel, getRole } from './discord';
+import remarkDiscord, {
+	discordRemarkRehypeHandlers,
+	type Resolver
+} from '@purduehackers/discord-markdown-utils';
 
-/** Remark plugin: auto-link bare URLs using GFM autolink literal extension */
-function remarkAutolink(this: any) {
-	const data = this.data();
-	add('micromarkExtensions', gfmAutolinkLiteral());
-	add('fromMarkdownExtensions', gfmAutolinkLiteralFromMarkdown());
+const resolver: Resolver = {
+	async user({ id }) {
+		const user = await getDiscordUser(id);
+		const name = user?.global_name ?? user?.username;
+		return name ? '@' + name : null;
+	},
 
-	function add(field: string, value: any) {
-		const list = data[field] ? data[field] : (data[field] = []);
-		list.push(value);
-	}
-}
-
-const ENTITY_PREFIX_MAP: Record<string, 'user' | 'channel' | 'role'> = {
-	'@': 'user',
-	'@!': 'user',
-	'#': 'channel',
-	'@&': 'role'
-};
-
-type Mention =
-	| { type: 'user' | 'role' | 'channel'; id: string }
-	| { type: 'emoji'; animated: boolean; name: string; id: string }
-	| { type: 'timestamp'; epochSeconds: number };
-
-async function hydrateMention(element: Element, mention: Mention) {
-	if (mention.type === 'user') {
-		const user = await getDiscordUser(mention.id);
-		const name = user?.global_name ?? user?.username ?? 'user';
-		element.tagName = 'span';
-		element.properties = { className: ['mention', 'mention-user'] };
-		element.children = [{ type: 'text', value: `@${name}` }];
-	} else if (mention.type === 'channel') {
-		const channel = await getDiscordChannel(mention.id);
-		const name = channel?.name ?? 'channel';
-		element.tagName = 'span';
-		element.properties = { className: ['mention', 'mention-channel'] };
-		element.children = [{ type: 'text', value: `#${name}` }];
-	} else if (mention.type === 'role') {
-		const role = await getRole(mention.id);
-		const name = role?.name || 'role';
-		const color = role?.color ? `#${role.color.toString(16).padStart(6, '0')}` : null;
-		const style = color && color !== '#000000' ? `color: ${color}; background: ${color}20;` : '';
-		element.tagName = 'span';
-		element.properties = { className: ['mention', 'mention-role'], style };
-		element.children = [{ type: 'text', value: `@${name}` }];
-	} else if (mention.type === 'emoji') {
-		const extension = mention.animated ? 'gif' : 'png';
-		element.tagName = 'img';
-		element.properties = {
-			src: `https://cdn.discordapp.com/emojis/${mention.id}.${extension}`,
-			alt: `:${mention.name}:`,
-			className: ['discord-emoji']
+	async role({ id }) {
+		const role = await getRole(id);
+		if (!role) return null;
+		return {
+			name: '@' + role.name,
+			color: role?.color ? `#${role.color.toString(16).padStart(6, '0')}` : undefined
 		};
-	} else if (mention.type === 'timestamp') {
-		const date = new Date(mention.epochSeconds * 1000);
-		element.tagName = 'time';
-		element.children = [{ type: 'text', value: date.toLocaleString() }];
+	},
+
+	async channel({ id }) {
+		const channel = await getDiscordChannel(id);
+		return channel?.name ? '#' + channel.name : null;
+	},
+
+	async emoji({ id, animated }) {
+		const animatedSuffix = animated ? '&animated=true' : '';
+		return `https://cdn.discordapp.com/emojis/${id}.webp?size=64${animatedSuffix}`;
+	},
+
+	async timestamp({ date }) {
+		return date.toLocaleString();
 	}
-}
-
-/** Rehype plugin: converts Discord syntax (mentions, emojis, timestamps) to HTML */
-function rehypeDiscord() {
-	return async (tree: Node) => {
-		const promises: Promise<unknown>[] = [];
-		visit(tree, 'text', (node: Text, index: number, parent: Parent) => {
-			const origText = node.value;
-			const entityMatches = [...origText.matchAll(/<(@!?|#|@&)(\d+)>/g)].map((match) => ({
-				match,
-				type: 'entity' as const
-			}));
-			const emojiMatches = [...origText.matchAll(/<(a?):(\w+):(\d+)>/g)].map((match) => ({
-				match,
-				type: 'emoji' as const
-			}));
-			const timestampMatches = [...origText.matchAll(/<t:(\d+)(?::[tTdDfFR])?>/g)].map((match) => ({
-				match,
-				type: 'timestamp' as const
-			}));
-			const allMatches = [...entityMatches, ...emojiMatches, ...timestampMatches];
-			if (allMatches.length === 0) return;
-			allMatches.sort((a, b) => a.match.index! - b.match.index!);
-
-			let lastMatchEnd = 0;
-			const components: RootContent[] = [];
-			for (const { match, type } of allMatches) {
-				if (match.index! > lastMatchEnd) {
-					components.push({
-						type: 'text',
-						value: origText.slice(lastMatchEnd, match.index!)
-					} satisfies Text);
-				}
-
-				let mention: Mention;
-				if (type === 'entity') {
-					mention = { type: ENTITY_PREFIX_MAP[match[1]], id: match[2]! };
-				} else if (type === 'emoji') {
-					mention = {
-						type: 'emoji',
-						animated: match[1] === 'a',
-						name: match[2]!,
-						id: match[3]!
-					};
-				} else {
-					mention = { type: 'timestamp', epochSeconds: parseInt(match[1]!) };
-				}
-
-				const element = { type: 'element' } as Element;
-				components.push(element);
-				promises.push(hydrateMention(element, mention));
-
-				lastMatchEnd = match.index! + match[0].length;
-			}
-			if (lastMatchEnd < origText.length) {
-				components.push({
-					type: 'text',
-					value: origText.slice(lastMatchEnd)
-				} satisfies Text);
-			}
-			parent.children.splice(index!, 1, ...components);
-		});
-		await Promise.all(promises);
-	};
-}
+};
 
 const COMMIT_PATTERN =
 	/^https?:\/\/(?<domain>[^/]+)\/(?<user>[^/]+)\/(?<repo>[^/]+)\/commit\/(?<sha>[a-f0-9]+)$/i;
@@ -252,21 +161,14 @@ const sanitizeSchema = {
 
 const processor = unified()
 	.use(remarkParse)
-	.use(remarkAutolink)
-	.use(remarkRehype)
+	.use(remarkDiscord, { resolver })
+	.use(remarkRehype, { handlers: discordRemarkRehypeHandlers })
 	.use(rehypeSanitize, sanitizeSchema)
-	.use(rehypeDiscord)
 	.use(rehypeGitLinks)
 	.use(rehypeLinkAttributes)
 	.use(rehypeStringify);
 
-/** Strip Discord's embed-silencing angle brackets: <URL> → URL */
-function stripAngleBracketLinks(text: string): string {
-	return text.replace(/<(https?:\/\/[^\s>]+)>/g, '$1');
-}
-
 export async function renderContent(content: string): Promise<string> {
-	const cleaned = stripAngleBracketLinks(content);
-	const result = await processor.process(cleaned);
+	const result = await processor.process(content);
 	return result.toString();
 }

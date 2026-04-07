@@ -104,7 +104,7 @@ body {
 	color: var(--color-muted);
 }
 
-.ship-content .mention {
+.ship-content :is(.discord-user, .discord-role, .discord-channel, span.discord-emoji) {
 	background: rgba(88, 101, 242, 0.3);
 	color: #c9cdfb;
 	padding: 0 2px;
@@ -112,7 +112,7 @@ body {
 	font-weight: 500;
 }
 
-.ship-content .discord-emoji {
+.ship-content img.discord-emoji {
 	display: inline;
 	height: 1.2em;
 	width: 1.2em;

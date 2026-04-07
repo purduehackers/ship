@@ -44,9 +44,8 @@
 	},
 	"dependencies": {
 		"@aws-sdk/client-s3": "^3.1006.0",
+		"@purduehackers/discord-markdown-utils": "^0.0.4",
 		"@purduehackers/time": "^0.7.0",
-		"mdast-util-gfm-autolink-literal": "^2.0.1",
-		"micromark-extension-gfm-autolink-literal": "^2.1.0",
 		"rehype-sanitize": "^6.0.0",
 		"rehype-stringify": "^10.0.1",
 		"remark-parse": "^11.0.0",
