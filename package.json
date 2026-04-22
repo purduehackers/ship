@@ -18,6 +18,7 @@
 		"db:studio": "drizzle-kit studio"
 	},
 	"devDependencies": {
+		"@aws-sdk/client-s3": "^3.1035.0",
 		"@eslint/compat": "^2.0.2",
 		"@eslint/js": "^9.39.2",
 		"@libsql/client": "^0.17.0",
@@ -43,9 +44,9 @@
 		"vite": "^7.3.1"
 	},
 	"dependencies": {
-		"@aws-sdk/client-s3": "^3.1006.0",
 		"@purduehackers/discord-markdown-utils": "^0.0.4",
 		"@purduehackers/time": "^0.7.0",
+		"@vercel/blob": "^2.3.3",
 		"rehype-sanitize": "^6.0.0",
 		"rehype-stringify": "^10.0.1",
 		"remark-parse": "^11.0.0",
