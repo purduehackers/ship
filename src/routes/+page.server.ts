@@ -4,16 +4,9 @@ import { desc } from 'drizzle-orm';
 import { renderContent } from '$lib/server/markdown';
 import { getUserModes } from '$lib/server/privacy';
 import { env } from '$env/dynamic/private';
+import { parseAttachments } from '$lib/server/attachments';
 
 if (!env.ISR_BYPASS_TOKEN) throw new Error('ISR_BYPASS_TOKEN is not set');
-
-interface StoredAttachment {
-	key: string;
-	type: string;
-	filename: string;
-	width?: number;
-	height?: number;
-}
 
 export const config = {
 	isr: {
@@ -31,13 +24,13 @@ export async function load() {
 
 	const mapped = await Promise.all(
 		visibleShips.map(async (s) => {
-			const stored = JSON.parse(s.attachments ?? '[]') as StoredAttachment[];
+			const stored = parseAttachments(s.attachments);
 			const contentHtml = s.content?.trim() ? await renderContent(s.content) : null;
 			return {
 				...s,
 				contentHtml,
 				attachments: stored.map((a) => ({
-					url: `/api/attachment/${a.key}`,
+					url: a.url,
 					type: a.type,
 					filename: a.filename,
 					width: a.width,
