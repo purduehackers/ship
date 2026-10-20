@@ -7,18 +7,13 @@
 
 	const frames = [ship1, ship2];
 	let frame = $state(0);
-	let loadingFrame = $state(0);
 
 	$effect(() => {
 		const interval = setInterval(() => {
 			frame = frame === 0 ? 1 : 0;
 		}, 500);
-		const fast = setInterval(() => {
-			loadingFrame = loadingFrame === 0 ? 1 : 0;
-		}, 250);
 		return () => {
 			clearInterval(interval);
-			clearInterval(fast);
 		};
 	});
 
@@ -65,13 +60,13 @@
 		const diff = Date.now() - new Date(iso).getTime();
 		const minutes = Math.floor(diff / 60000);
 		if (minutes < 1) return 'just now';
-		else if (minutes < 60) return formatter.format(-minutes, "minute");
+		else if (minutes < 60) return formatter.format(-minutes, 'minute');
 		const hours = Math.floor(minutes / 60);
-		if (hours < 24) return formatter.format(-hours, "hour");
+		if (hours < 24) return formatter.format(-hours, 'hour');
 		const days = Math.floor(hours / 24);
-		if (days < 14) return formatter.format(-days, "day");
+		if (days < 14) return formatter.format(-days, 'day');
 		const weeks = Math.floor(days / 7);
-		return formatter.format(-weeks, "week");
+		return formatter.format(-weeks, 'week');
 	}
 
 	let masonryContainer = $state<HTMLDivElement>();
@@ -153,7 +148,7 @@
 	});
 </script>
 
-<div class="min-h-screen overflow-x-clip bg-bg">
+<main class="min-h-screen overflow-x-clip bg-bg">
 	<canvas
 		bind:this={smokeCanvas}
 		class="pointer-events-none absolute z-20"
@@ -167,9 +162,18 @@
 				<h1 class="font-pixel text-5xl leading-tight text-text md:text-7xl">
 					Purdue Hackers Ships
 				</h1>
-				<p class="mt-1 font-body text-sm text-muted">
-					A feed of everything Purdue Hackers members have shipped.
+				<p class="mt-1 max-w-2xl font-body text-sm text-muted">
+					Projects and progress shared by Purdue Hackers members across software, hardware, and
+					design. PH backs highly talented, curious people working on ambitious ideas.
 				</p>
+				<nav
+					aria-label="Explore Purdue Hackers"
+					class="mt-4 flex flex-wrap gap-x-5 gap-y-2 font-body text-sm text-text"
+				>
+					<a class="underline" href="https://grants.purduehackers.com/">Project funding</a>
+					<a class="underline" href="https://spill.purduehackers.com/">spill exhibition</a>
+					<a class="underline" href="https://bento.purduehackers.com/">BENTO talks</a>
+				</nav>
 			</div>
 			<div class="relative shrink-0" bind:this={shipRef}>
 				<img
@@ -187,28 +191,27 @@
 			<p class="font-body text-lg text-muted">No ships yet.</p>
 		</div>
 	{:else}
-		{#if !masonryReady}
-			<div class="flex flex-col items-center justify-center gap-3 py-24">
-				<img
-					src={frames[loadingFrame]}
-					alt="Loading"
-					class="h-16 w-16"
-					style="image-rendering: pixelated; filter: invert(1);"
-				/>
-				<p class="font-pixel text-sm text-muted">Laying out feed...</p>
-			</div>
-		{/if}
 		<div class="masonry" bind:this={masonryContainer} class:masonry-ready={masonryReady}>
 			{#each data.ships as ship (ship.id)}
-				<div class="border-4 border-border p-4 font-body">
-					<div class="flex items-center gap-2">
+				<article id={`ship-${ship.id}`} class="scroll-mt-10 border-4 border-border p-4 font-body">
+					<div class="flex flex-wrap items-center gap-2">
 						{#if ship.avatarUrl}
 							<img src={ship.avatarUrl} alt={ship.username} class="h-6 w-6 rounded-full" />
 						{:else}
 							<div class="h-6 w-6 rounded-full bg-border"></div>
 						{/if}
-						<span class="text-sm font-bold text-text">{ship.username}</span>
-						<span class="ml-auto text-sm text-muted">{relativeTime(ship.shippedAt)}</span>
+						<h2 class="text-sm font-bold text-text">{ship.username}</h2>
+						<a
+							href={`#ship-${ship.id}`}
+							class="ml-auto text-sm text-muted underline"
+							aria-label={`Link to ${ship.username}’s ship`}
+						>
+							<time
+								datetime={ship.shippedAt}
+								title={new Date(ship.shippedAt).toLocaleString('en-US', { timeZone: 'UTC' }) +
+									' UTC'}>{relativeTime(ship.shippedAt)}</time
+							>
+						</a>
 					</div>
 
 					{#if ship.contentHtml}
@@ -253,7 +256,7 @@
 							{/each}
 						</div>
 					{/if}
-				</div>
+				</article>
 			{/each}
 		</div>
 		{#if masonryReady}
@@ -262,16 +265,18 @@
 			</div>
 		{/if}
 	{/if}
-</div>
+</main>
 
 <style>
-	/* Hidden until JS masonry positions everything */
+	/* Readable immediately, including without JavaScript. JS enhances the grid
+	   with masonry positioning once mounted. */
 	.masonry {
 		position: relative;
-		visibility: hidden;
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
 	}
 
 	.masonry-ready {
-		visibility: visible;
+		display: block;
 	}
 </style>

@@ -32,6 +32,7 @@ function cached<T>(key: string, ttlMs: number, fn: () => Promise<T>): Promise<T>
 }
 
 async function discordFetch<T>(path: string): Promise<T | null> {
+	if (!env.DISCORD_BOT_TOKEN) return null;
 	try {
 		const res = await fetch(`${DISCORD_API}${path}`, {
 			headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` },

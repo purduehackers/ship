@@ -21,11 +21,17 @@ export async function load() {
 	// Filter out ships from users who have opted out
 	const modes = await getUserModes(ships.map((s) => s.userId));
 	const visibleShips = ships.filter((s) => modes.get(s.userId) === 'opt_in');
+	// Reuse the latest publicly visible name when resolving mentions. Keep
+	// this request-local and only include users who pass the privacy filter.
+	const knownUsers = new Map<string, string>();
+	for (const s of visibleShips) {
+		if (!knownUsers.has(s.userId)) knownUsers.set(s.userId, s.username);
+	}
 
 	const mapped = await Promise.all(
 		visibleShips.map(async (s) => {
 			const stored = parseAttachments(s.attachments);
-			const contentHtml = s.content?.trim() ? await renderContent(s.content) : null;
+			const contentHtml = s.content?.trim() ? await renderContent(s.content, knownUsers) : null;
 			return {
 				...s,
 				contentHtml,

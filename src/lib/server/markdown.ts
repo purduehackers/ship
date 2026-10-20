@@ -159,16 +159,30 @@ const sanitizeSchema = {
 	}
 };
 
-const processor = unified()
-	.use(remarkParse)
-	.use(remarkDiscord, { resolver })
-	.use(remarkRehype, { handlers: discordRemarkRehypeHandlers })
-	.use(rehypeSanitize, sanitizeSchema)
-	.use(rehypeGitLinks)
-	.use(rehypeLinkAttributes)
-	.use(rehypeStringify);
+export async function renderContent(
+	content: string,
+	knownUsers: ReadonlyMap<string, string> = new Map()
+): Promise<string> {
+	const processor = unified()
+		.use(remarkParse)
+		.use(remarkDiscord, {
+			resolver: {
+				...resolver,
+				async user({ id }: { id: string }) {
+					const name = knownUsers.get(id);
+					if (name) return '@' + name;
+					const user = await getDiscordUser(id);
+					const fallback = user?.global_name ?? user?.username;
+					return fallback ? '@' + fallback : null;
+				}
+			}
+		})
+		.use(remarkRehype, { handlers: discordRemarkRehypeHandlers })
+		.use(rehypeSanitize, sanitizeSchema)
+		.use(rehypeGitLinks)
+		.use(rehypeLinkAttributes)
+		.use(rehypeStringify);
 
-export async function renderContent(content: string): Promise<string> {
 	const result = await processor.process(content);
 	return result.toString();
 }
