@@ -7,10 +7,3 @@ export function requireShipApiKey(request: Request): void {
 		throw error(401, 'Unauthorized');
 	}
 }
-
-export function requirePrivacyApiKey(request: Request): void {
-	const auth = request.headers.get('authorization');
-	if (auth !== `Bearer ${env.PRIVACYDB_API_KEY}`) {
-		throw error(401, 'Unauthorized');
-	}
-}
