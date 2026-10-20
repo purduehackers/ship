@@ -20,7 +20,7 @@ export async function load() {
 	const mapped = await Promise.all(
 		ships.map(async (s) => {
 			const stored = parseAttachments(s.attachments);
-			const contentHtml = s.content?.trim() ? await renderContent(s.content) : null;
+			const contentHtml = s.content?.trim() ? await renderContent(s.content, knownUsers) : null;
 			return {
 				...s,
 				contentHtml,
