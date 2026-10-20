@@ -2,7 +2,6 @@ import { db } from '$lib/server/db';
 import { ship } from '$lib/server/db/schema';
 import { desc } from 'drizzle-orm';
 import { renderContent } from '$lib/server/markdown';
-import { getUserModes } from '$lib/server/privacy';
 import { env } from '$env/dynamic/private';
 import { parseAttachments } from '$lib/server/attachments';
 
@@ -18,12 +17,8 @@ export const config = {
 export async function load() {
 	const ships = await db.select().from(ship).orderBy(desc(ship.shippedAt));
 
-	// Filter out ships from users who have opted out
-	const modes = await getUserModes(ships.map((s) => s.userId));
-	const visibleShips = ships.filter((s) => modes.get(s.userId) === 'opt_in');
-
 	const mapped = await Promise.all(
-		visibleShips.map(async (s) => {
+		ships.map(async (s) => {
 			const stored = parseAttachments(s.attachments);
 			const contentHtml = s.content?.trim() ? await renderContent(s.content) : null;
 			return {
